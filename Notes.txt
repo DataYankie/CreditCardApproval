@@ -1,0 +1,6 @@
+Plan:
+- Find ud af, hvordan vi skal skabe the response variable
+    - Hvornår er en kunde, en dårlig kunde?
+- Udvikle det før EDA
+- Opdater EDA for at få forholdet mellem de forskellige attributer og response variable
+- Begynd at udvikle nogle modeller
