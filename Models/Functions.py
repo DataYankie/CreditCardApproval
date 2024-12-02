@@ -1,21 +1,8 @@
 from sklearn.metrics import precision_recall_curve
-from sklearn.model_selection import train_test_split, RandomizedSearchCV
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.utils import class_weight
 import matplotlib.pyplot as plt
 import numpy as np
-import os
-import pandas as pd
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, make_scorer, recall_score, precision_score, f1_score, roc_curve, auc
-
-# The scores we want to look at
-scoring = {
-    'accuracy': 'accuracy',
-    'precision': make_scorer(precision_score, zero_division=0),
-    'recall': make_scorer(recall_score, zero_division=0),
-    'f1': make_scorer(f1_score, zero_division=0)
-}
 
 # Function for plotting a confusion matrix and print the recall, precision and f1 score 
 def get_result(true_label, predictions, threshold: int):
