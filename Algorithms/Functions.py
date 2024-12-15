@@ -7,7 +7,7 @@ import os
 import seaborn as sns
 
 # Function for plotting a confusion matrix and print the recall, precision and f1 score 
-def get_result(true_label, predictions, threshold: int):
+def get_result(true_label, predictions, threshold=0.5):
     y_pred = (predictions > threshold).astype(int)
 
     cm = confusion_matrix(true_label, y_pred)
