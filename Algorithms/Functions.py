@@ -7,16 +7,29 @@ import os
 import seaborn as sns
 
 # Function for plotting a confusion matrix and print the recall, precision and f1 score 
-def get_result(true_label, predictions, threshold=0.5):
+def get_result(true_label: np.ndarray, predictions: np.ndarray, threshold: float=0.5, visualize: bool = True) -> dict[str, float]:
+    """
+    Calculate performance metrics and optionally display a confusion matrix.
+
+    Args:
+        true_label (np.ndarray): Array of true labels.
+        predictions (np.ndarray): Array of predicted probabilities or labels.
+        threshold (float, optional): Threshold for binary classification. Defaults to 0.5.
+        visualize (bool, optional): Whether to display a confusion matrix heatmap. Defaults to True.
+
+    Returns:
+        Dict[str, float]: A dictionary containing recall, precision, and F1 score.
+    """
     y_pred = (predictions > threshold).astype(int)
 
-    cm = confusion_matrix(true_label, y_pred)
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+    if visualize:
+        cm = confusion_matrix(true_label, y_pred)
+        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
 
-    plt.xlabel('Predicted')
-    plt.ylabel('Actual')
-    plt.title('Confusion Matrix')
-    plt.show()
+        plt.xlabel('Predicted')
+        plt.ylabel('Actual')
+        plt.title('Confusion Matrix')
+        plt.show()
 
     recall = recall_score(true_label, y_pred)
     precision = precision_score(true_label, y_pred)
@@ -25,7 +38,11 @@ def get_result(true_label, predictions, threshold=0.5):
     print('Precision    =', round(precision, 2))
     print('F1           =', round(f1, 2))
 
-    return recall, precision, f1
+    return {
+        'recall': recall,
+        'precision': precision, 
+        'f1': f1
+    }
 
 # Function for plotting how the different threshold affects the metrics and return the threshold resulting in the highest f1 score
 def plot_precision_recall_vs_threshold(name, true_labels, predictions):
