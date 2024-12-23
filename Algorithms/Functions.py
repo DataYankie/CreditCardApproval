@@ -86,7 +86,17 @@ def plot_precision_recall_vs_threshold(name: str, true_labels: np.ndarray, predi
     return best_threshold
 
 # Function for plotting the ROC curve
-def plot_roc_curve(y_true, y_probs):
+def plot_roc_curve(y_true: np.ndarray, y_probs: np.ndarray) -> float:
+    """
+    Plots the Receiver Operating Characteristic (ROC) curve and computes the Area Under the Curve (AUC).
+
+    Args:
+        y_true (np.ndarray): Array of true binary labels.
+        y_probs (np.ndarray): Array of predicted probabilities.
+
+    Returns:
+        float: The AUC value.
+    """
     # Calculate the False Positive Rate and True Positive Rate
     fpr, tpr, _ = roc_curve(y_true, y_probs)
     
@@ -103,6 +113,9 @@ def plot_roc_curve(y_true, y_probs):
     plt.legend(loc="center right")
     plt.grid(True)
     plt.show()
+
+    # Return the AUC value
+    return roc_auc
 
 def save_metrics_to_json(model_name, recall, precision, f1_score, file_path='Model_metrics.json'):
     """
