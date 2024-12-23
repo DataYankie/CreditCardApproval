@@ -45,7 +45,18 @@ def get_result(true_label: np.ndarray, predictions: np.ndarray, threshold: float
     }
 
 # Function for plotting how the different threshold affects the metrics and return the threshold resulting in the highest f1 score
-def plot_precision_recall_vs_threshold(name, true_labels, predictions):
+def plot_precision_recall_vs_threshold(name: str, true_labels: np.ndarray, predictions: np.ndarray) -> float:
+    """
+    Plots precision, recall, and F1 score as functions of thresholds and identifies the threshold that results in the best f1-score.
+
+    Args:
+        name (str): The name of the model or experiment.
+        true_labels (np.ndarray): Array of true binary labels.
+        predictions (np.ndarray): Array of predicted probabilities.
+
+    Returns:
+        float: A float containing the best threshold.
+    """
     # Calculate the precision and recall
     precision, recall, thresholds = precision_recall_curve(true_labels, predictions)
 
