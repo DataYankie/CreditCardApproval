@@ -2,3 +2,4 @@ data/
 __pycache__/
 Saved models/
 Algorithms/Model_metrics.json
+logs/
