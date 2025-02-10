@@ -44,15 +44,16 @@ def get_result(true_label: np.ndarray, predictions: np.ndarray, threshold: float
         'f1': f1
     }
 
-# Function for plotting how the different threshold affects the metrics and return the threshold resulting in the highest f1 score
-def plot_precision_recall_vs_threshold(name: str, true_labels: np.ndarray, predictions: np.ndarray) -> float:
+# Function for getting the threshold resulting in the highest f1 score 
+def get_best_threshold(name: str, true_labels: np.ndarray, predictions: np.ndarray, show_plot: bool = True) -> float:
     """
-    Plots precision, recall, and F1 score as functions of thresholds and identifies the threshold that results in the best f1-score.
+    Identifies the threshold that results in the best F1 score and optionally plots the precision, recall, and F1 score.
 
     Args:
         name (str): The name of the model or experiment.
         true_labels (np.ndarray): Array of true binary labels.
         predictions (np.ndarray): Array of predicted probabilities.
+        show_plot (bool, optional): Whether to display the plot. Defaults to True.
 
     Returns:
         float: A float containing the best threshold.
@@ -68,20 +69,21 @@ def plot_precision_recall_vs_threshold(name: str, true_labels: np.ndarray, predi
     best_index = np.argmax(f1_scores)
     best_threshold = thresholds[best_index]
 
-    plt.figure(figsize=(10, 6))
-    plt.plot(thresholds, precision[:-1], label=name + ' Precision', marker='.', color='Red')
-    plt.plot(thresholds, recall[:-1], label=name + ' Recall', marker='.', color='Blue')
-    plt.plot(thresholds, f1_scores[:-1], label=name + ' F1 Score', marker='.', color='Green')
+    if show_plot:
+        plt.figure(figsize=(10, 6))
+        plt.plot(thresholds, precision[:-1], label=name + ' Precision', marker='.', color='Red')
+        plt.plot(thresholds, recall[:-1], label=name + ' Recall', marker='.', color='Blue')
+        plt.plot(thresholds, f1_scores[:-1], label=name + ' F1 Score', marker='.', color='Green')
 
-    # Add a vertical line at the best threshold
-    plt.axvline(x=best_threshold, color='grey', linestyle='--', label=f'Best Threshold: {best_threshold:.4f}')
+        # Add a vertical line at the best threshold
+        plt.axvline(x=best_threshold, color='grey', linestyle='--', label=f'Best Threshold: {best_threshold:.4f}')
 
-    plt.xlabel('Threshold')
-    plt.ylabel('Rate')
-    plt.title('Overview')
-    plt.legend(loc="best")
-    plt.grid(True)
-    plt.show()
+        plt.xlabel('Threshold')
+        plt.ylabel('Rate')
+        plt.title('Overview')
+        plt.legend(loc="best")
+        plt.grid(True)
+        plt.show()
     
     return best_threshold
 
