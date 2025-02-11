@@ -119,7 +119,7 @@ def plot_roc_curve(y_true: np.ndarray, y_probs: np.ndarray) -> float:
     # Return the AUC value
     return roc_auc
 
-def save_metrics_to_json(model_name, recall, precision, f1_score, file_path='Model_metrics.json'):
+def save_metrics_to_json(model_name: str, recall: float, precision: float, f1_score: float, threshold: float = 0.5, file_path: str ='Model_metrics.json'):
     """
     Saves or updates model evaluation metrics in a JSON file.
 
@@ -128,6 +128,7 @@ def save_metrics_to_json(model_name, recall, precision, f1_score, file_path='Mod
         recall (float): Recall value.
         precision (float): Precision value.
         f1_score (float): F1-score value.
+        threshold (float): Threshold value.
         file_path (str): Path to the JSON file.
     """
     # Initialize the data dictionary
@@ -146,7 +147,8 @@ def save_metrics_to_json(model_name, recall, precision, f1_score, file_path='Mod
     data[model_name] = {
         'recall': recall,
         'precision': precision,
-        'f1_score': f1_score
+        'f1_score': f1_score,
+        'threshold': threshold
     }
 
     # Save the updated data back to the JSON file
