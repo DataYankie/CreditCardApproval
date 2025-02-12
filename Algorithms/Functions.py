@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import seaborn as sns
+import tempfile
 
 # Function for plotting a confusion matrix and print the recall, precision and f1 score 
 def get_result(true_label: np.ndarray, predictions: np.ndarray, threshold: float=0.5, visualize: bool = True) -> dict[str, float]:
@@ -151,6 +152,13 @@ def save_metrics_to_json(model_name: str, recall: float, precision: float, f1_sc
         'threshold': threshold
     }
 
-    # Save the updated data back to the JSON file
-    with open(file_path, 'w') as file:
-        json.dump(data, file, indent=4)
+     # Write data to a temporary file first
+    try:
+        with tempfile.NamedTemporaryFile('w', delete=False, encoding='utf-8') as temp_file:
+            json.dump(data, temp_file, indent=4)
+            temp_file_path = temp_file.name
+        
+        # Replace original file with temporary file
+        os.replace(temp_file_path, file_path)
+    except Exception as e:
+        print(f"Error: Could not save data to JSON. {e}")
