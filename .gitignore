@@ -4,3 +4,4 @@ Saved models/
 Algorithms/Model_metrics.json
 logs/
 tmp/
+mlruns/
