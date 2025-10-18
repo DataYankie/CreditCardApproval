@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/240556674670264023/a33ddb08dbfa4488b0f51de3a74bd167/artifacts
+end_time: 1760735809153
+entry_point_name: ''
+experiment_id: '240556674670264023'
+lifecycle_stage: active
+run_id: a33ddb08dbfa4488b0f51de3a74bd167
+run_name: victorious-bass-186
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1760735809144
+status: 4
+tags: []
+user_id: ykh

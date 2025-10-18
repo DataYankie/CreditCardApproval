@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/240556674670264023/3b77fc42095246f08dce952135e33451/artifacts
+end_time: 1760735809165
+entry_point_name: ''
+experiment_id: '240556674670264023'
+lifecycle_stage: active
+run_id: 3b77fc42095246f08dce952135e33451
+run_name: first_attempt
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1760735809134
+status: 4
+tags: []
+user_id: ykh
