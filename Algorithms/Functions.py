@@ -1,4 +1,4 @@
-from sklearn.metrics import confusion_matrix, make_scorer, recall_score, precision_score, f1_score, roc_curve, auc
+from sklearn.metrics import confusion_matrix, make_scorer, recall_score, precision_score, f1_score, roc_curve, auc, accuracy_score
 from sklearn.metrics import precision_recall_curve
 import json
 import matplotlib.pyplot as plt
@@ -8,7 +8,7 @@ import seaborn as sns
 import tempfile
 
 # Function for plotting a confusion matrix and print the recall, precision and f1 score 
-def get_result(true_label: np.ndarray, predictions: np.ndarray, threshold: float=0.5, visualize: bool = True) -> dict[str, float]:
+def get_result(true_label: np.ndarray, predictions: np.ndarray, threshold: float=0.5, visualize: bool = False) -> dict[str, float]:
     """
     Calculate performance metrics and optionally display a confusion matrix.
 
@@ -16,12 +16,17 @@ def get_result(true_label: np.ndarray, predictions: np.ndarray, threshold: float
         true_label (np.ndarray): Array of true labels.
         predictions (np.ndarray): Array of predicted probabilities or labels.
         threshold (float, optional): Threshold for binary classification. Defaults to 0.5.
-        visualize (bool, optional): Whether to display a confusion matrix heatmap. Defaults to True.
+        visualize (bool, optional): Whether to display a confusion matrix heatmap. Defaults to False.
 
     Returns:
         Dict[str, float]: A dictionary containing recall, precision, and F1 score.
     """
     y_pred = (predictions > threshold).astype(int)
+
+    accuracy = make_scorer(accuracy_score(true_label, y_pred), zero_division=0)
+    precision = make_scorer(precision_score(true_label, y_pred), zero_division=0)
+    recall = make_scorer(recall_score(true_label, y_pred), zero_division=0)
+    f1 = make_scorer(f1_score(true_label, y_pred), zero_division=0)
 
     if visualize:
         cm = confusion_matrix(true_label, y_pred)
@@ -31,15 +36,14 @@ def get_result(true_label: np.ndarray, predictions: np.ndarray, threshold: float
         plt.ylabel('Actual')
         plt.title('Confusion Matrix')
         plt.show()
-
-    recall = recall_score(true_label, y_pred)
-    precision = precision_score(true_label, y_pred)
-    f1 = f1_score(true_label, y_pred)
-    print('Recall       =', round(recall, 2))
-    print('Precision    =', round(precision, 2))
-    print('F1           =', round(f1, 2))
+    
+        print('Accuracy     =', round(accuracy, 2))
+        print('Recall       =', round(recall, 2))
+        print('Precision    =', round(precision, 2))
+        print('F1           =', round(f1, 2))
 
     return {
+        'accuracy': accuracy,
         'recall': recall,
         'precision': precision, 
         'f1': f1
@@ -162,3 +166,15 @@ def save_metrics_to_json(model_name: str, recall: float, precision: float, f1_sc
         os.replace(temp_file_path, file_path)
     except Exception as e:
         print(f"Error: Could not save data to JSON. {e}")
+
+def get_scores(y, preds):
+    accuracy = make_scorer(accuracy_score(y, preds), zero_division=0)
+    precision = make_scorer(precision_score(y, preds), zero_division=0)
+    recall = make_scorer(recall_score(y, preds), zero_division=0)
+    f1 = make_scorer(f1_score(y, preds), zero_division=0)
+    return {
+        'accuracy': accuracy,
+        'precision': precision,
+        'recall': recall,
+        'f1': f1
+    }   
