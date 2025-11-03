@@ -19,14 +19,18 @@ def get_result(true_label: np.ndarray, predictions: np.ndarray, threshold: float
         visualize (bool, optional): Whether to display a confusion matrix heatmap. Defaults to False.
 
     Returns:
-        Dict[str, float]: A dictionary containing recall, precision, and F1 score.
+        Dict [str, float]: A dictionary containing recall, precision, and F1 score.
     """
     y_pred = (predictions > threshold).astype(int)
 
-    accuracy = make_scorer(accuracy_score(true_label, y_pred), zero_division=0)
-    precision = make_scorer(precision_score(true_label, y_pred), zero_division=0)
-    recall = make_scorer(recall_score(true_label, y_pred), zero_division=0)
-    f1 = make_scorer(f1_score(true_label, y_pred), zero_division=0)
+    # accuracy = make_scorer(accuracy_score(true_label, y_pred), zero_division=0)
+    # precision = make_scorer(precision_score(true_label, y_pred), zero_division=0)
+    # recall = make_scorer(recall_score(true_label, y_pred), zero_division=0)
+    # f1 = make_scorer(f1_score(true_label, y_pred), zero_division=0)
+    accuracy = accuracy_score(true_label, y_pred)
+    precision = precision_score(true_label, y_pred, zero_division=0)
+    recall = recall_score(true_label, y_pred, zero_division=0)
+    f1 = f1_score(true_label, y_pred, zero_division=0)
 
     if visualize:
         cm = confusion_matrix(true_label, y_pred)

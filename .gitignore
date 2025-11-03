@@ -5,3 +5,5 @@ Algorithms/Model_metrics.json
 logs/
 tmp/
 mlruns/
+mlartifacts/
+mlflow.db
