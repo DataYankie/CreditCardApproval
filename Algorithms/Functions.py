@@ -169,16 +169,14 @@ def save_metrics_to_json(model_name: str, recall: float, precision: float, f1_sc
         # Replace original file with temporary file
         os.replace(temp_file_path, file_path)
     except Exception as e:
-        print(f"Error: Could not save data to JSON. {e}")
+        print(f"Error: Could not save data to JSON. {e}")  
 
-def get_scores(y, preds):
-    accuracy = make_scorer(accuracy_score(y, preds), zero_division=0)
-    precision = make_scorer(precision_score(y, preds), zero_division=0)
-    recall = make_scorer(recall_score(y, preds), zero_division=0)
-    f1 = make_scorer(f1_score(y, preds), zero_division=0)
-    return {
-        'accuracy': accuracy,
-        'precision': precision,
-        'recall': recall,
-        'f1': f1
-    }   
+def auto_cast(value):
+    if value.lower() in {"true", "false"}:
+        return value.lower() == "true"
+    try:
+        if "." in value:
+            return float(value)
+        return int(value)
+    except ValueError:
+        return value
