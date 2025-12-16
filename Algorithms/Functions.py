@@ -7,6 +7,8 @@ import os
 import seaborn as sns
 import tempfile
 from mlflow import xgboost, sklearn, keras
+from mlflow.exceptions import RestException
+
 
 # Function for plotting a confusion matrix and print the recall, precision and f1 score 
 def get_result(true_label: np.ndarray, predictions: np.ndarray, threshold: float=0.5, visualize: bool = False) -> dict[str, float]:
@@ -181,15 +183,9 @@ def auto_cast(value):
         return int(value)
     except ValueError:
         return value
-    
-def promote_challenger_to_champion(client, model_name: str, challenger_version: int):
-    print('')
+
+def promote_challenger_to_champion(client, model_name: str, challenger_version: int, champ_version: int):
     print('Promoting new model to champion status')
-    # Get champion model version
-    champ_version = client.get_model_version_by_alias(
-        name=model_name,
-        alias="champion"
-    )
     # Delete existing champion alias
     client.delete_registered_model_alias(
         name=model_name,
@@ -198,7 +194,7 @@ def promote_challenger_to_champion(client, model_name: str, challenger_version: 
     # Set former champion to previous-champion alias
     client.set_registered_model_alias(
         name=model_name,
-        version=champ_version.version,
+        version=champ_version,
         alias="previous-champion"
     )
     # Promote new model to champion
@@ -213,7 +209,6 @@ def promote_challenger_to_champion(client, model_name: str, challenger_version: 
     )
 
 def challenger_rejected(client, model_name: str, challenger_version: int):
-    print('')
     print('Current champion remains')
     # Challenger model rejected
     client.delete_registered_model_alias(
@@ -227,7 +222,6 @@ def challenger_rejected(client, model_name: str, challenger_version: int):
     )
 
 def no_champion_promote(client, model_name: str, challenger_version: int):
-    print('')
     print('No existing champion model found.')
     print('Setting current model as champion.')
     # Promote new model to champion
@@ -241,19 +235,39 @@ def no_champion_promote(client, model_name: str, challenger_version: int):
         alias="champion"
     )
 
-# Need to get the best threshold from the logged parameters
-def challenge_champion(client, algorithm_name: str, model_name: str, Y_test: np.ndarray):
-    if algorithm_name.lower() == 'xgboost':
-        champ_model = xgboost.load_model(f"models:/{model_name}@champion")
-    elif algorithm_name.lower() == 'randomforest':
-        champ_model = sklearn.load_model(f"models:/{model_name}@champion")
-    elif algorithm_name.lower() == 'neuralnetwork':
-        champ_model = keras.load_model(f"models:/{model_name}@champion")
-    else:
-        raise ValueError(f"Unsupported algorithm: {algorithm_name}. Supported algorithms are: XGBoost, RandomForest, NeuralNetwork.")
-    if algorithm_name.lower() == 'neuralnetwork':
-        champ_predictions = champ_model.predict(Y_test)
-    else:
-        champ_predictions = champ_model.predict_proba(Y_test)[:, 1]
-    print('-- Confusion matrix for challenger model --')
-    champ_result = get_result(Y_test, champ_predictions, best_threshold, visualize=True)
+def challenge_champion(
+        client, 
+        algorithm_name: str, 
+        model_name: str, 
+        X_test: np.ndarray,
+        Y_test: np.ndarray,
+        challenger_metrics: dict[str, float],
+        competing_metric: str = 'f1'
+        ):
+    try:
+        challenger_version = client.get_model_version_by_alias(name=model_name, alias="challenger").version
+        if algorithm_name.lower() == 'xgboost':
+            champ_model = xgboost.load_model(f"models:/{model_name}@champion")
+        elif algorithm_name.lower() == 'randomforest':
+            champ_model = sklearn.load_model(f"models:/{model_name}@champion")
+        elif algorithm_name.lower() == 'neuralnetwork':
+            champ_model = keras.load_model(f"models:/{model_name}@champion")
+        else:
+            raise ValueError(f"Unsupported algorithm: {algorithm_name}. Supported algorithms are: XGBoost, RandomForest, NeuralNetwork.")
+        if algorithm_name.lower() == 'neuralnetwork':
+            champ_predictions = champ_model.predict(X_test)
+        else:
+            champ_predictions = champ_model.predict_proba(X_test)[:, 1]
+        champ_info = client.get_model_version_by_alias(name=model_name, alias="champion")
+        champ_threshold = float(champ_info.tags['best_threshold'])
+        champ_version = champ_info.version
+        print('-- Confusion matrix for champion model --')
+        champ_result = get_result(Y_test, champ_predictions, champ_threshold, visualize=True)
+        print('')
+        print(10*'- ')
+        if challenger_metrics[competing_metric] > champ_result[competing_metric]:
+            promote_challenger_to_champion(client, model_name, challenger_version, champ_version)
+        else: # Challenger model rejected
+            challenger_rejected(client, model_name, challenger_version)
+    except RestException:
+        no_champion_promote(client, model_name, challenger_version)
