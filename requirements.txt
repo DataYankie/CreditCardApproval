@@ -74,7 +74,7 @@ Pillow @ file:///croot/pillow_1696580024257/work
 platformdirs @ file:///home/conda/feedstock_root/build_artifacts/platformdirs_1701708255999/work
 ply==3.11
 prompt-toolkit @ file:///home/conda/feedstock_root/build_artifacts/prompt-toolkit_1702399386289/work
-protobuf==4.23.4
+protobuf==3.20.3
 psutil @ file:///home/conda/feedstock_root/build_artifacts/psutil_1702833071572/work
 ptyprocess @ file:///home/conda/feedstock_root/build_artifacts/ptyprocess_1609419310487/work/dist/ptyprocess-0.7.0-py2.py3-none-any.whl
 pure-eval @ file:///home/conda/feedstock_root/build_artifacts/pure_eval_1642875951954/work

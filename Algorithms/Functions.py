@@ -1,4 +1,4 @@
-from sklearn.metrics import confusion_matrix, make_scorer, recall_score, precision_score, f1_score, roc_curve, auc
+from sklearn.metrics import confusion_matrix, make_scorer, recall_score, precision_score, f1_score, roc_curve, auc, accuracy_score
 from sklearn.metrics import precision_recall_curve
 import json
 import matplotlib.pyplot as plt
@@ -6,9 +6,12 @@ import numpy as np
 import os
 import seaborn as sns
 import tempfile
+from mlflow import xgboost, sklearn, keras
+from mlflow.exceptions import RestException
+
 
 # Function for plotting a confusion matrix and print the recall, precision and f1 score 
-def get_result(true_label: np.ndarray, predictions: np.ndarray, threshold: float=0.5, visualize: bool = True) -> dict[str, float]:
+def get_result(true_label: np.ndarray, predictions: np.ndarray, threshold: float=0.5, visualize: bool = False) -> dict[str, float]:
     """
     Calculate performance metrics and optionally display a confusion matrix.
 
@@ -16,12 +19,21 @@ def get_result(true_label: np.ndarray, predictions: np.ndarray, threshold: float
         true_label (np.ndarray): Array of true labels.
         predictions (np.ndarray): Array of predicted probabilities or labels.
         threshold (float, optional): Threshold for binary classification. Defaults to 0.5.
-        visualize (bool, optional): Whether to display a confusion matrix heatmap. Defaults to True.
+        visualize (bool, optional): Whether to display a confusion matrix heatmap. Defaults to False.
 
     Returns:
-        Dict[str, float]: A dictionary containing recall, precision, and F1 score.
+        Dict [str, float]: A dictionary containing recall, precision, and F1 score.
     """
     y_pred = (predictions > threshold).astype(int)
+
+    # accuracy = make_scorer(accuracy_score(true_label, y_pred), zero_division=0)
+    # precision = make_scorer(precision_score(true_label, y_pred), zero_division=0)
+    # recall = make_scorer(recall_score(true_label, y_pred), zero_division=0)
+    # f1 = make_scorer(f1_score(true_label, y_pred), zero_division=0)
+    accuracy = accuracy_score(true_label, y_pred)
+    precision = precision_score(true_label, y_pred, zero_division=0)
+    recall = recall_score(true_label, y_pred, zero_division=0)
+    f1 = f1_score(true_label, y_pred, zero_division=0)
 
     if visualize:
         cm = confusion_matrix(true_label, y_pred)
@@ -31,15 +43,14 @@ def get_result(true_label: np.ndarray, predictions: np.ndarray, threshold: float
         plt.ylabel('Actual')
         plt.title('Confusion Matrix')
         plt.show()
-
-    recall = recall_score(true_label, y_pred)
-    precision = precision_score(true_label, y_pred)
-    f1 = f1_score(true_label, y_pred)
-    print('Recall       =', round(recall, 2))
-    print('Precision    =', round(precision, 2))
-    print('F1           =', round(f1, 2))
+    
+        print('Accuracy     =', round(accuracy, 2))
+        print('Recall       =', round(recall, 2))
+        print('Precision    =', round(precision, 2))
+        print('F1           =', round(f1, 2))
 
     return {
+        'accuracy': accuracy,
         'recall': recall,
         'precision': precision, 
         'f1': f1
@@ -161,4 +172,102 @@ def save_metrics_to_json(model_name: str, recall: float, precision: float, f1_sc
         # Replace original file with temporary file
         os.replace(temp_file_path, file_path)
     except Exception as e:
-        print(f"Error: Could not save data to JSON. {e}")
+        print(f"Error: Could not save data to JSON. {e}")  
+
+def auto_cast(value):
+    if value.lower() in {"true", "false"}:
+        return value.lower() == "true"
+    try:
+        if "." in value:
+            return float(value)
+        return int(value)
+    except ValueError:
+        return value
+
+def promote_challenger_to_champion(client, model_name: str, challenger_version: int, champ_version: int):
+    print('Promoting new model to champion status')
+    # Delete existing champion alias
+    client.delete_registered_model_alias(
+        name=model_name,
+        alias="champion"
+    )
+    # Set former champion to previous-champion alias
+    client.set_registered_model_alias(
+        name=model_name,
+        version=champ_version,
+        alias="previous-champion"
+    )
+    # Promote new model to champion
+    client.delete_registered_model_alias(
+        name=model_name,
+        alias="challenger"
+    )
+    client.set_registered_model_alias(
+        name=model_name,
+        version=challenger_version,
+        alias="champion"
+    )
+
+def challenger_rejected(client, model_name: str, challenger_version: int):
+    print('Current champion remains')
+    # Challenger model rejected
+    client.delete_registered_model_alias(
+        name=model_name,
+        alias="challenger"
+    )
+    client.set_registered_model_alias(
+        name=model_name,
+        version=challenger_version,
+        alias="rejected"
+    )
+
+def no_champion_promote(client, model_name: str, challenger_version: int):
+    print('No existing champion model found.')
+    print('Setting current model as champion.')
+    # Promote new model to champion
+    client.delete_registered_model_alias(
+            name=model_name,
+            alias="challenger"
+        )
+    client.set_registered_model_alias(
+        name=model_name,
+        version=challenger_version,
+        alias="champion"
+    )
+
+def challenge_champion(
+        client, 
+        algorithm_name: str, 
+        model_name: str, 
+        X_test: np.ndarray,
+        Y_test: np.ndarray,
+        challenger_metrics: dict[str, float],
+        competing_metric: str = 'f1'
+        ):
+    try:
+        challenger_version = client.get_model_version_by_alias(name=model_name, alias="challenger").version
+        if algorithm_name.lower() == 'xgboost':
+            champ_model = xgboost.load_model(f"models:/{model_name}@champion")
+        elif algorithm_name.lower() == 'randomforest':
+            champ_model = sklearn.load_model(f"models:/{model_name}@champion")
+        elif algorithm_name.lower() == 'neuralnetwork':
+            champ_model = keras.load_model(f"models:/{model_name}@champion")
+        else:
+            raise ValueError(f"Unsupported algorithm: {algorithm_name}. Supported algorithms are: XGBoost, RandomForest, NeuralNetwork.")
+        if algorithm_name.lower() == 'neuralnetwork':
+            champ_predictions = champ_model.predict(X_test)
+        else:
+            champ_predictions = champ_model.predict_proba(X_test)[:, 1]
+        champ_info = client.get_model_version_by_alias(name=model_name, alias="champion")
+        champ_threshold = float(champ_info.tags['best_threshold'])
+        champ_version = champ_info.version
+        print('-- Confusion matrix for champion model --')
+        champ_result = get_result(Y_test, champ_predictions, champ_threshold, visualize=True)
+        print('')
+        print(10*'- ')
+        if challenger_metrics[competing_metric] > champ_result[competing_metric]:
+            promote_challenger_to_champion(client, model_name, challenger_version, champ_version)
+        else: # Challenger model rejected
+            challenger_rejected(client, model_name, challenger_version)
+    except RestException:
+        no_champion_promote(client, model_name, challenger_version)
