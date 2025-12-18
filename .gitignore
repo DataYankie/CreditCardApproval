@@ -6,3 +6,4 @@ logs/
 tmp/
 mlruns/
 Algorithms/mlruns/
+mlflow_data/
