@@ -6,3 +6,6 @@ logs/
 tmp/
 mlruns/
 Algorithms/mlruns/
+mlflow_data/
+mlflow.db
+.vscode/

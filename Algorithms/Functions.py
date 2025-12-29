@@ -6,7 +6,7 @@ import numpy as np
 import os
 import seaborn as sns
 import tempfile
-from mlflow import xgboost, sklearn, keras
+from mlflow import xgboost, sklearn, keras, pyfunc
 from mlflow.exceptions import RestException
 
 
@@ -252,10 +252,14 @@ def challenge_champion(
             champ_model = sklearn.load_model(f"models:/{model_name}@champion")
         elif algorithm_name.lower() == 'neuralnetwork':
             champ_model = keras.load_model(f"models:/{model_name}@champion")
+        elif algorithm_name.lower() == 'ensemble':
+            champ_model = pyfunc.load_model(f"models:/{model_name}@champion")
         else:
             raise ValueError(f"Unsupported algorithm: {algorithm_name}. Supported algorithms are: XGBoost, RandomForest, NeuralNetwork.")
         if algorithm_name.lower() == 'neuralnetwork':
             champ_predictions = champ_model.predict(X_test)
+        elif algorithm_name.lower() == 'ensemble':
+            champ_predictions = champ_model.predict(model_input=X_test)
         else:
             champ_predictions = champ_model.predict_proba(X_test)[:, 1]
         champ_info = client.get_model_version_by_alias(name=model_name, alias="champion")
