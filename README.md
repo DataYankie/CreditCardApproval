@@ -1,8 +1,35 @@
 # Credit Card Approval 💳
 Link to dataset: [Kaggle Credit Card Approval Prediction](https://www.kaggle.com/datasets/rikdifos/credit-card-approval-prediction/data)
 
+This project implements an ensemble machine learning pipeline to predict credit card approval risks. It leverages **MLflow** to manage the lifecycle of machine learning models, including experiment tracking, model registration, and automated champion/challenger comparison.
+
 ## Project Overview
 The goal of this project is to build and compare several machine learning models to predict if an applicant is a 'good' or 'risky' customer. The definition of 'good' or 'risky' is not provided, so we need to construct the labels ourselves. Additionally, the project addresses the challenge of imbalanced data, which is a significant issue in this dataset.
+
+The core of this project is an **Ensemble Model** that aggregates predictions from three distinct base models to improve classification performance:
+1.  **XGBoost**
+2.  **Random Forest**
+3.  **Neural Network**
+
+The ensemble supports two voting mechanisms:
+*   **Hard Voting:** Majority rule based on the binary predictions of each base model (using their specific optimal thresholds).
+*   **Soft Voting:** Averaging the predicted probabilities from all models and applying a global threshold.
+
+## Features
+
+*   **Dynamic Model Loading:** Automatically fetches the current `champion` versions of the base models from the MLflow Model Registry.
+*   **Custom MLflow Model:** Defines a `EnsembleModel` class (inheriting from `mlflow.pyfunc.PythonModel`) that standardizes inference across different libraries (Scikit-Learn, Keras, XGBoost).
+*   **Experiment Tracking:** Logs parameters, metrics (Accuracy, Recall, Precision, F1), and artifacts to MLflow.
+*   **Automated Evaluation:**
+    *   Calculates optimal thresholds for soft voting.
+    *   Registers new ensemble versions.
+    *   Compares the new "challenger" model against the current "champion" on the test set and promotes it if performance improves.
+
+## Prerequisites
+
+*   **Python 3.x**
+*   **Libraries:** `pandas`, `numpy`, `xgboost`, `tensorflow` (Keras), `scikit-learn`, `mlflow`, `matplotlib`
+*   **MLflow Server:** Must be running and accessible. Configuration is read from `../config.json`.
 
 ## Project Structure
 This project contains the following files:
@@ -20,15 +47,21 @@ This project contains the following files:
 
 ## Usage
 
-To run the notebooks, you will need to have the necessary libraries installed. You can install the required libraries using the following command:
+1.  **Configure MLflow:** Ensure `../config.json` exists and points to your MLflow tracking server:
+    ```json
+    {
+      "host": "127.0.0.1",
+      "port": "8080"
+    }
+    ```
+2.  **Prepare Base Models:** Ensure the base models (XGBoost, Random Forest, Neural Network) have been trained and registered in MLflow with the alias `champion`.
+3.  **Run the Notebook:** Execute `Algorithms/EnsembleModel.ipynb`. It will:
+    *   Load the data.
+    *   Load the base models.
+    *   Run Hard Voting evaluation.
+    *   Run Soft Voting evaluation.
+    *   Log results to MLflow.
+    *   Register the model and attempt to promote it to champion.
 
-```sh
-pip install -r requirements.txt
-```
-The order to run the notebooks:
-1. *CreditCardApproval.ipynb*
-2. Order does not matter for these:
-    1. *XGBoost.ipynb*
-    2. *RandomForest.ipynb*
-    3. *Neural network.ipynb*
-4. *ModelResults.ipynb*
+## Metrics
+The project primarily optimizes for **F1 Score**, while also tracking Accuracy, Recall, and Precision.
