@@ -1,15 +1,16 @@
 # Credit Card Approval 💳
 Link to dataset: [Kaggle Credit Card Approval Prediction](https://www.kaggle.com/datasets/rikdifos/credit-card-approval-prediction/data)
 
-This project implements an ensemble machine learning pipeline to predict credit card approval risks. It leverages **MLflow** to manage the lifecycle of machine learning models, including experiment tracking, model registration, and automated champion/challenger comparison.
-
 ## Project Overview
 The goal of this project is to build and compare several machine learning models to predict if an applicant is a 'good' or 'risky' customer. The definition of 'good' or 'risky' is not provided, so we need to construct the labels ourselves. Additionally, the project addresses the challenge of imbalanced data, which is a significant issue in this dataset.
 
-The core of this project is an **Ensemble Model** that aggregates predictions from three distinct base models to improve classification performance:
+The project leverages **MLflow** to manage the lifecycle of machine learning models, including experiment tracking, model registration, and automated champion/challenger comparison.
+
+The core of this project is the following four models:
 1.  **XGBoost**
 2.  **Random Forest**
 3.  **Neural Network**
+4.  **Ensemble Model** (aggregates predictions from the three distinct base models)
 
 The ensemble supports two voting mechanisms:
 *   **Hard Voting:** Majority rule based on the binary predictions of each base model (using their specific optimal thresholds).
@@ -37,31 +38,34 @@ This project contains the following files:
   
 - **ModelResults.ipynb**: Provides a quick overview of the results from the trained models.
   
-- **XGBoost.ipynb**: Notebook for training a XGBClassifier on the dataset.
+- **XGBoost.ipynb**: Notebook for training a XGBClassifier.
   
 - **RandomForest.ipynb**: Notebook for training a RandomForestClassifier.
 
 - **Neural network.ipynb**: Notebook for training a neural network and explore different ways to handle the class imbalance in the dataset. Various techniques are tested to mitigate the impact of the imbalance.
+
+- **EnsembleModel.ipynb**: Notebook that uses the champion-models from each algorithm to create an ensemble model.
   
-- **Functions.py**: This script contains utility functions used for evaluating the models in the above notebooks.
+- **Functions.py**: This script contains utility functions used in the above notebooks.
 
 ## Usage
 
-1.  **Configure MLflow:** Ensure `../config.json` exists and points to your MLflow tracking server:
+1.  **Start MLflow server**
+2.  **Configure MLflow:** Ensure `../config.json` exists and points to your MLflow tracking server:
     ```json
     {
       "host": "127.0.0.1",
       "port": "8080"
     }
     ```
-2.  **Prepare Base Models:** Ensure the base models (XGBoost, Random Forest, Neural Network) have been trained and registered in MLflow with the alias `champion`.
-3.  **Run the Notebook:** Execute `Algorithms/EnsembleModel.ipynb`. It will:
-    *   Load the data.
-    *   Load the base models.
-    *   Run Hard Voting evaluation.
-    *   Run Soft Voting evaluation.
-    *   Log results to MLflow.
-    *   Register the model and attempt to promote it to champion.
+3.  **Run the Notebooks:** The notebooks needs to be executed in the following order:
+   1. **CreditCardApproval.ipynb**
+   2. (no specific order for the following)
+      - **XGBoost.ipynb**
+      - **RandomForest.ipynb**
+      - **Neural network.ipynb**
+   4. **EnsembleModel.ipynb**
+   5. **ModelResults.ipynb**
 
 ## Metrics
 The project primarily optimizes for **F1 Score**, while also tracking Accuracy, Recall, and Precision.
